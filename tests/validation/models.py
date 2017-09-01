@@ -1,10 +1,7 @@
-from __future__ import unicode_literals
-
 from datetime import datetime
 
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 
 
 def validate_answer_to_universe(value):
@@ -31,10 +28,12 @@ class ModelToValidate(models.Model):
     )
     url = models.URLField(blank=True)
     f_with_custom_validator = models.IntegerField(blank=True, null=True, validators=[validate_answer_to_universe])
+    f_with_iterable_of_validators = models.IntegerField(blank=True, null=True,
+                                                        validators=(validate_answer_to_universe,))
     slug = models.SlugField(blank=True)
 
     def clean(self):
-        super(ModelToValidate, self).clean()
+        super().clean()
         if self.number == 11:
             raise ValidationError('Invalid number supplied!')
 
@@ -89,7 +88,6 @@ class Article(models.Model):
             self.pub_date = datetime.now()
 
 
-@python_2_unicode_compatible
 class Post(models.Model):
     title = models.CharField(max_length=50, unique_for_date='posted', blank=True)
     slug = models.CharField(max_length=50, unique_for_year='posted', blank=True)

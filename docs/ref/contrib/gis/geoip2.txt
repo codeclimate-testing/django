@@ -5,8 +5,6 @@ Geolocation with GeoIP2
 .. module:: django.contrib.gis.geoip2
     :synopsis: Python interface for MaxMind's GeoIP2 databases.
 
-.. versionadded:: 1.9
-
 The :class:`GeoIP2` object is a wrapper for the `MaxMind geoip2 Python
 library`__. [#]_
 
@@ -19,7 +17,7 @@ in a directory corresponding to the :setting:`GEOIP_PATH` setting.
 Additionally, it is recommended to install the `libmaxminddb C library`__, so
 that ``geoip2`` can leverage the C library's faster speed.
 
-__ https://geoip2.readthedocs.org/
+__ https://geoip2.readthedocs.io/
 __ https://pypi.python.org/pypi/geoip2
 __ http://dev.maxmind.com/geoip/geoip2/geolite2/
 __ https://github.com/maxmind/libmaxminddb
@@ -41,7 +39,8 @@ Here is an example of its usage::
     'latitude': 37.419200897216797,
     'longitude': -122.05740356445312,
     'postal_code': '94043',
-    'region': 'CA'}
+    'region': 'CA',
+    'time_zone': 'America/Los_Angeles'}
     >>> g.lat_lon('salon.com')
     (39.0437, -77.4875)
     >>> g.lon_lat('uh.edu')
@@ -49,35 +48,7 @@ Here is an example of its usage::
     >>> g.geos('24.124.1.80').wkt
     'POINT (-97 38)'
 
-``GeoIP`` Settings
-==================
-
-.. setting:: GEOIP_PATH
-
-``GEOIP_PATH``
---------------
-
-A string specifying the directory where the GeoIP data files are
-located. This setting is *required* unless manually specified
-with ``path`` keyword when initializing the :class:`GeoIP2` object.
-
-.. setting:: GEOIP_COUNTRY
-
-``GEOIP_COUNTRY``
------------------
-
-The basename to use for the GeoIP country data file. Defaults to
-``'GeoLite2-Country.mmdb'``.
-
-.. setting:: GEOIP_CITY
-
-``GEOIP_CITY``
---------------
-
-The basename to use for the GeoIP city data file. Defaults to
-``'GeoLite2-City.mmdb'``.
-
-``GeoIP`` API
+API Reference
 =============
 
 .. class:: GeoIP2(path=None, cache=0, country=None, city=None)
@@ -112,8 +83,8 @@ Keyword Arguments    Description
                      the :setting:`GEOIP_CITY` setting.
 ===================  =======================================================
 
-``GeoIP`` Methods
-=================
+Methods
+=======
 
 Instantiating
 -------------
@@ -168,6 +139,34 @@ Returns a coordinate tuple of (latitude, longitude),
 
 Returns a :class:`~django.contrib.gis.geos.Point` object corresponding to the
 query.
+
+Settings
+========
+
+.. setting:: GEOIP_PATH
+
+``GEOIP_PATH``
+--------------
+
+A string specifying the directory where the GeoIP data files are
+located. This setting is *required* unless manually specified
+with ``path`` keyword when initializing the :class:`GeoIP2` object.
+
+.. setting:: GEOIP_COUNTRY
+
+``GEOIP_COUNTRY``
+-----------------
+
+The basename to use for the GeoIP country data file. Defaults to
+``'GeoLite2-Country.mmdb'``.
+
+.. setting:: GEOIP_CITY
+
+``GEOIP_CITY``
+--------------
+
+The basename to use for the GeoIP city data file. Defaults to
+``'GeoLite2-City.mmdb'``.
 
 .. rubric:: Footnotes
 .. [#] GeoIP(R) is a registered trademark of MaxMind, Inc.

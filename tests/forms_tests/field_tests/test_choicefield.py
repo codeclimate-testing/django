@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.forms import ChoiceField, Form, ValidationError
 from django.test import SimpleTestCase
 
@@ -53,6 +51,10 @@ class ChoiceFieldTest(FormFieldAssertionsMixin, SimpleTestCase):
         msg = "'Select a valid choice. 6 is not one of the available choices.'"
         with self.assertRaisesMessage(ValidationError, msg):
             f.clean('6')
+
+    def test_choicefield_choices_default(self):
+        f = ChoiceField()
+        self.assertEqual(f.choices, [])
 
     def test_choicefield_callable(self):
         def choices():

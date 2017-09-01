@@ -23,7 +23,7 @@ class RemoteUserTest(TestCase):
     def setUp(self):
         self.patched_settings = modify_settings(
             AUTHENTICATION_BACKENDS={'append': self.backend},
-            MIDDLEWARE_CLASSES={'append': self.middleware},
+            MIDDLEWARE={'append': self.middleware},
         )
         self.patched_settings.enable()
 
@@ -75,7 +75,7 @@ class RemoteUserTest(TestCase):
                                    **{self.header: self.known_user})
         self.assertEqual(response.context['user'].username, 'knownuser')
         self.assertEqual(User.objects.count(), num_users)
-        # Test that a different user passed in the headers causes the new user
+        # A different user passed in the headers causes the new user
         # to be logged in.
         response = self.client.get('/remote_user/',
                                    **{self.header: self.known_user2})
@@ -84,7 +84,7 @@ class RemoteUserTest(TestCase):
 
     def test_last_login(self):
         """
-        Tests that a user's last_login is set the first time they make a
+        A user's last_login is set the first time they make a
         request but not updated in subsequent requests with the same session.
         """
         user = User.objects.create(username='knownuser')
@@ -108,7 +108,7 @@ class RemoteUserTest(TestCase):
 
     def test_header_disappears(self):
         """
-        Tests that a logged in user is logged out automatically when
+        A logged in user is logged out automatically when
         the REMOTE_USER header disappears during the same browser session.
         """
         User.objects.create(username='knownuser')
@@ -129,7 +129,7 @@ class RemoteUserTest(TestCase):
 
     def test_user_switch_forces_new_login(self):
         """
-        Tests that if the username in the header changes between requests
+        If the username in the header changes between requests
         that the original user is logged out
         """
         User.objects.create(username='knownuser')
@@ -140,7 +140,7 @@ class RemoteUserTest(TestCase):
         # During the session, the REMOTE_USER changes to a different user.
         response = self.client.get('/remote_user/',
                                    **{self.header: "newnewuser"})
-        # Ensure that the current user is not the prior remote_user
+        # The current user is not the prior remote_user.
         # In backends that create a new user, username is "newnewuser"
         # In backends that do not create new users, it is '' (anonymous user)
         self.assertNotEqual(response.context['user'].username, 'knownuser')
@@ -218,7 +218,7 @@ class RemoteUserCustomTest(RemoteUserTest):
         The strings passed in REMOTE_USER should be cleaned and the known users
         should not have been configured with an email address.
         """
-        super(RemoteUserCustomTest, self).test_known_user()
+        super().test_known_user()
         self.assertEqual(User.objects.get(username='knownuser').email, '')
         self.assertEqual(User.objects.get(username='knownuser2').email, '')
 
@@ -226,7 +226,7 @@ class RemoteUserCustomTest(RemoteUserTest):
         """
         The unknown user created should be configured with an email address.
         """
-        super(RemoteUserCustomTest, self).test_unknown_user()
+        super().test_unknown_user()
         newuser = User.objects.get(username='newuser')
         self.assertEqual(newuser.email, 'user@example.com')
 

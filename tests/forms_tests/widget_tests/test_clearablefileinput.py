@@ -1,15 +1,12 @@
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.forms import ClearableFileInput
-from django.utils import six
-from django.utils.encoding import python_2_unicode_compatible
+from django.forms import ClearableFileInput, MultiWidget
 
 from .base import WidgetTest
 
 
-@python_2_unicode_compatible
-class FakeFieldFile(object):
+class FakeFieldFile:
     """
-    Quacks like a FieldFile (has a .url and unicode representation), but
+    Quacks like a FieldFile (has a .url and string representation), but
     doesn't require us to care about storages etc.
     """
     url = 'something'
@@ -40,22 +37,21 @@ class ClearableFileInputTest(WidgetTest):
         A ClearableFileInput should escape name, filename, and URL
         when rendering HTML (#15182).
         """
-        @python_2_unicode_compatible
-        class StrangeFieldFile(object):
+        class StrangeFieldFile:
             url = "something?chapter=1&sect=2&copy=3&lang=en"
 
             def __str__(self):
                 return '''something<div onclick="alert('oops')">.jpg'''
 
-        widget = ClearableFileInput()
-        field = StrangeFieldFile()
-        output = widget.render('my<div>file', field)
-        self.assertNotIn(field.url, output)
-        self.assertIn('href="something?chapter=1&amp;sect=2&amp;copy=3&amp;lang=en"', output)
-        self.assertNotIn(six.text_type(field), output)
-        self.assertIn('something&lt;div onclick=&quot;alert(&#39;oops&#39;)&quot;&gt;.jpg', output)
-        self.assertIn('my&lt;div&gt;file', output)
-        self.assertNotIn('my<div>file', output)
+        self.check_html(ClearableFileInput(), 'my<div>file', StrangeFieldFile(), html=(
+            """
+            Currently: <a href="something?chapter=1&amp;sect=2&amp;copy=3&amp;lang=en">
+            something&lt;div onclick=&quot;alert(&#39;oops&#39;)&quot;&gt;.jpg</a>
+            <input type="checkbox" name="my&lt;div&gt;file-clear" id="my&lt;div&gt;file-clear_id" />
+            <label for="my&lt;div&gt;file-clear_id">Clear</label><br />
+            Change: <input type="file" name="my&lt;div&gt;file" />
+            """
+        ))
 
     def test_clear_input_renders_only_if_not_required(self):
         """
@@ -78,6 +74,18 @@ class ClearableFileInputTest(WidgetTest):
         """
         self.check_html(self.widget, 'myfile', None, html='<input type="file" name="myfile" />')
 
+    def test_render_as_subwidget(self):
+        """A ClearableFileInput as a subwidget of MultiWidget."""
+        widget = MultiWidget(widgets=(self.widget,))
+        self.check_html(widget, 'myfile', [FakeFieldFile()], html=(
+            """
+            Currently: <a href="something">something</a>
+            <input type="checkbox" name="myfile_0-clear" id="myfile_0-clear_id" />
+            <label for="myfile_0-clear_id">Clear</label><br />
+            Change: <input type="file" name="myfile_0" />
+            """
+        ))
+
     def test_clear_input_checked_returns_false(self):
         """
         ClearableFileInput.value_from_datadict returns False if the clear
@@ -88,7 +96,7 @@ class ClearableFileInputTest(WidgetTest):
             files={},
             name='myfile',
         )
-        self.assertEqual(value, False)
+        self.assertIs(value, False)
 
     def test_clear_input_checked_returns_false_only_if_not_required(self):
         """
@@ -111,8 +119,7 @@ class ClearableFileInputTest(WidgetTest):
         A ClearableFileInput should not mask exceptions produced while
         checking that it has a value.
         """
-        @python_2_unicode_compatible
-        class FailingURLFieldFile(object):
+        class FailingURLFieldFile:
             @property
             def url(self):
                 raise ValueError('Canary')
@@ -124,8 +131,7 @@ class ClearableFileInputTest(WidgetTest):
             self.widget.render('myfile', FailingURLFieldFile())
 
     def test_url_as_property(self):
-        @python_2_unicode_compatible
-        class URLFieldFile(object):
+        class URLFieldFile:
             @property
             def url(self):
                 return 'https://www.python.org/'
@@ -137,10 +143,21 @@ class ClearableFileInputTest(WidgetTest):
         self.assertInHTML('<a href="https://www.python.org/">value</a>', html)
 
     def test_return_false_if_url_does_not_exists(self):
-        @python_2_unicode_compatible
-        class NoURLFieldFile(object):
+        class NoURLFieldFile:
             def __str__(self):
                 return 'value'
 
         html = self.widget.render('myfile', NoURLFieldFile())
         self.assertHTMLEqual(html, '<input name="myfile" type="file" />')
+
+    def test_use_required_attribute(self):
+        # False when initial data exists. The file input is left blank by the
+        # user to keep the existing, initial value.
+        self.assertIs(self.widget.use_required_attribute(None), True)
+        self.assertIs(self.widget.use_required_attribute('resume.txt'), False)
+
+    def test_value_omitted_from_data(self):
+        widget = ClearableFileInput()
+        self.assertIs(widget.value_omitted_from_data({}, {}, 'field'), True)
+        self.assertIs(widget.value_omitted_from_data({}, {'field': 'x'}, 'field'), False)
+        self.assertIs(widget.value_omitted_from_data({'field-clear': 'y'}, {}, 'field'), False)

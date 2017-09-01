@@ -22,10 +22,6 @@ MRO is an acronym for Method Resolution Order.
     this base class. It isn't strictly a generic view and thus can also be
     imported from ``django.views``.
 
-    .. versionchanged:: 1.10
-
-        The ability to import from ``django.views`` was added.
-
     **Method Flowchart**
 
     1. :meth:`dispatch()`
@@ -70,10 +66,15 @@ MRO is an acronym for Method Resolution Order.
 
             response = MyView.as_view()(request)
 
-        .. versionadded:: 1.9
-
         The returned view has ``view_class`` and ``view_initkwargs``
         attributes.
+
+        When the view is called during the request/response cycle, the
+        :class:`~django.http.HttpRequest` is assigned to the view's ``request``
+        attribute. Any positional and/or keyword arguments :ref:`captured from
+        the URL pattern <how-django-processes-a-request>` are assigned to the
+        ``args`` and ``kwargs`` attributes, respectively. Then :meth:`dispatch`
+        is called.
 
     .. method:: dispatch(request, *args, **kwargs)
 
@@ -99,8 +100,10 @@ MRO is an acronym for Method Resolution Order.
 
     .. method:: options(request, *args, **kwargs)
 
-        Handles responding to requests for the OPTIONS HTTP verb.  Returns a
-        list of the allowed HTTP method names for the view.
+        Handles responding to requests for the OPTIONS HTTP verb. Returns a
+        response with the ``Allow`` header containing a list of the view's
+        allowed HTTP method names.
+
 
 ``TemplateView``
 ================
@@ -135,7 +138,7 @@ MRO is an acronym for Method Resolution Order.
             template_name = "home.html"
 
             def get_context_data(self, **kwargs):
-                context = super(HomePageView, self).get_context_data(**kwargs)
+                context = super().get_context_data(**kwargs)
                 context['latest_articles'] = Article.objects.all()[:5]
                 return context
 
@@ -153,6 +156,9 @@ MRO is an acronym for Method Resolution Order.
 
     * Populated (through :class:`~django.views.generic.base.ContextMixin`) with
       the keyword arguments captured from the URL pattern that served the view.
+    * You can also add context using the
+      :attr:`~django.views.generic.base.ContextMixin.extra_context` keyword
+      argument for :meth:`~django.views.generic.base.View.as_view`.
 
 ``RedirectView``
 ================
@@ -198,7 +204,7 @@ MRO is an acronym for Method Resolution Order.
             def get_redirect_url(self, *args, **kwargs):
                 article = get_object_or_404(Article, pk=kwargs['pk'])
                 article.update_counter()
-                return super(ArticleCounterRedirectView, self).get_redirect_url(*args, **kwargs)
+                return super().get_redirect_url(*args, **kwargs)
 
     **Example urls.py**::
 
@@ -231,11 +237,6 @@ MRO is an acronym for Method Resolution Order.
         the HTTP status code returned. If ``True``, then the redirect will use
         status code 301. If ``False``, then the redirect will use status code
         302. By default, ``permanent`` is ``False``.
-
-        .. versionchanged:: 1.9
-
-            The default value of the ``permanent`` attribute changed from
-            ``True`` to ``False``.
 
     .. attribute:: query_string
 

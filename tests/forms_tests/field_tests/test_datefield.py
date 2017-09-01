@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from datetime import date, datetime
 
 from django.forms import (
@@ -69,7 +68,7 @@ class DateFieldTest(SimpleTestCase):
             'mydate_year': '2008',
             'mydate_month': '4',
             'mydate_day': '1',
-            'initial-mydate': HiddenInput()._format_value(date(2008, 4, 1)),
+            'initial-mydate': HiddenInput().format_value(date(2008, 4, 1)),
         }, initial={'mydate': date(2008, 4, 1)})
         self.assertFalse(b.has_changed())
 
@@ -77,7 +76,7 @@ class DateFieldTest(SimpleTestCase):
             'mydate_year': '2008',
             'mydate_month': '4',
             'mydate_day': '22',
-            'initial-mydate': HiddenInput()._format_value(date(2008, 4, 1)),
+            'initial-mydate': HiddenInput().format_value(date(2008, 4, 1)),
         }, initial={'mydate': date(2008, 4, 1)})
         self.assertTrue(b.has_changed())
 
@@ -85,7 +84,7 @@ class DateFieldTest(SimpleTestCase):
             'mydate_year': '2008',
             'mydate_month': '4',
             'mydate_day': '22',
-            'initial-mydate': HiddenInput()._format_value(date(2008, 4, 1)),
+            'initial-mydate': HiddenInput().format_value(date(2008, 4, 1)),
         }, initial={'mydate': date(2008, 4, 22)})
         self.assertTrue(b.has_changed())
 
@@ -93,7 +92,7 @@ class DateFieldTest(SimpleTestCase):
             'mydate_year': '2008',
             'mydate_month': '4',
             'mydate_day': '22',
-            'initial-mydate': HiddenInput()._format_value(date(2008, 4, 22)),
+            'initial-mydate': HiddenInput().format_value(date(2008, 4, 22)),
         }, initial={'mydate': date(2008, 4, 1)})
         self.assertFalse(b.has_changed())
 
@@ -104,7 +103,7 @@ class DateFieldTest(SimpleTestCase):
         a = GetDate({'mydate_month': '2', 'mydate_day': '31', 'mydate_year': '2010'})
         self.assertFalse(a.is_valid())
         # 'Geef een geldige datum op.' = 'Enter a valid date.'
-        self.assertEqual(a.errors, {'mydate': ['Geef een geldige datum op.']})
+        self.assertEqual(a.errors, {'mydate': ['Voer een geldige datum in.']})
 
     @override_settings(USE_L10N=True)
     @translation.override('nl')

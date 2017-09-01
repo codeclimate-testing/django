@@ -29,10 +29,10 @@ Configuration
 
 First, you must add the
 :class:`django.contrib.auth.middleware.RemoteUserMiddleware` to the
-:setting:`MIDDLEWARE_CLASSES` setting **after** the
+:setting:`MIDDLEWARE` setting **after** the
 :class:`django.contrib.auth.middleware.AuthenticationMiddleware`::
 
-    MIDDLEWARE_CLASSES = [
+    MIDDLEWARE = [
         '...',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         'django.contrib.auth.middleware.RemoteUserMiddleware',
@@ -75,10 +75,6 @@ regardless of ``AUTHENTICATION_BACKENDS``.
     :class:`~django.contrib.auth.backends.AllowAllUsersRemoteUserBackend` if
     you want to allow them to.
 
-    .. versionchanged:: 1.10
-
-        In older versions, inactive users weren't rejected as described above.
-
 If your authentication mechanism uses a custom HTTP header and not
 ``REMOTE_USER``, you can subclass ``RemoteUserMiddleware`` and set the
 ``header`` attribute to the desired ``request.META`` key.  For example::
@@ -112,8 +108,6 @@ override one or more of its attributes and methods.
 
 Using ``REMOTE_USER`` on login pages only
 =========================================
-
-.. versionadded:: 1.9
 
 The ``RemoteUserMiddleware`` authentication middleware assumes that the HTTP
 request header ``REMOTE_USER`` is present with all authenticated requests. That

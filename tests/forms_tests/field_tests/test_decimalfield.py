@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import decimal
 
 from django.forms import DecimalField, NumberInput, ValidationError, Widget
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, override_settings
 from django.utils import formats, translation
 
 from . import FormFieldAssertionsMixin
@@ -14,7 +11,7 @@ class DecimalFieldTest(FormFieldAssertionsMixin, SimpleTestCase):
 
     def test_decimalfield_1(self):
         f = DecimalField(max_digits=4, decimal_places=2)
-        self.assertWidgetRendersTo(f, '<input id="id_f" step="0.01" type="number" name="f" />')
+        self.assertWidgetRendersTo(f, '<input id="id_f" step="0.01" type="number" name="f" required />')
         with self.assertRaisesMessage(ValidationError, "'This field is required.'"):
             f.clean('')
         with self.assertRaisesMessage(ValidationError, "'This field is required.'"):
@@ -80,7 +77,10 @@ class DecimalFieldTest(FormFieldAssertionsMixin, SimpleTestCase):
             max_value=decimal.Decimal('1.5'),
             min_value=decimal.Decimal('0.5')
         )
-        self.assertWidgetRendersTo(f, '<input step="0.01" name="f" min="0.5" max="1.5" type="number" id="id_f" />')
+        self.assertWidgetRendersTo(
+            f,
+            '<input step="0.01" name="f" min="0.5" max="1.5" type="number" id="id_f" required />',
+        )
         with self.assertRaisesMessage(ValidationError, "'Ensure this value is less than or equal to 1.5.'"):
             f.clean('1.6')
         with self.assertRaisesMessage(ValidationError, "'Ensure this value is greater than or equal to 0.5.'"):
@@ -136,7 +136,7 @@ class DecimalFieldTest(FormFieldAssertionsMixin, SimpleTestCase):
         f = DecimalField(max_digits=20)
         self.assertEqual(f.widget_attrs(NumberInput()), {'step': 'any'})
         f = DecimalField(max_digits=6, widget=NumberInput(attrs={'step': '0.01'}))
-        self.assertWidgetRendersTo(f, '<input step="0.01" name="f" type="number" id="id_f" />')
+        self.assertWidgetRendersTo(f, '<input step="0.01" name="f" type="number" id="id_f" required />')
 
     def test_decimalfield_localized(self):
         """
@@ -144,7 +144,7 @@ class DecimalFieldTest(FormFieldAssertionsMixin, SimpleTestCase):
         number input specific attributes.
         """
         f = DecimalField(localize=True)
-        self.assertWidgetRendersTo(f, '<input id="id_f" name="f" type="text" />')
+        self.assertWidgetRendersTo(f, '<input id="id_f" name="f" type="text" required />')
 
     def test_decimalfield_changed(self):
         f = DecimalField(max_digits=2, decimal_places=2)
@@ -156,3 +156,18 @@ class DecimalFieldTest(FormFieldAssertionsMixin, SimpleTestCase):
             f = DecimalField(max_digits=2, decimal_places=2, localize=True)
             localized_d = formats.localize_input(d)  # -> '0,1' in French
             self.assertFalse(f.has_changed(d, localized_d))
+
+    @override_settings(USE_L10N=False, DECIMAL_SEPARATOR=',')
+    def test_decimalfield_support_decimal_separator(self):
+        f = DecimalField(localize=True)
+        self.assertEqual(f.clean('1001,10'), decimal.Decimal("1001.10"))
+        self.assertEqual(f.clean('1001.10'), decimal.Decimal("1001.10"))
+
+    @override_settings(USE_L10N=False, DECIMAL_SEPARATOR=',', USE_THOUSAND_SEPARATOR=True,
+                       THOUSAND_SEPARATOR='.')
+    def test_decimalfield_support_thousands_separator(self):
+        f = DecimalField(localize=True)
+        self.assertEqual(f.clean('1.001,10'), decimal.Decimal("1001.10"))
+        msg = "'Enter a number.'"
+        with self.assertRaisesMessage(ValidationError, msg):
+            f.clean('1,001.1')

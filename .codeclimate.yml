@@ -3,3 +3,7 @@ plugins:
   structure:
     enabled: true
     channel: beta
+exclude_patterns:
+  - tests/**/*
+  - config/**/*
+  - vendor/**/*
